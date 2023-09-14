@@ -1,0 +1,130 @@
+@import '~node_modules/modern-normalize/modern-normalize.css';
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: rgb(232, 203, 203);
+}
+
+
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+
+.search-form {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0 10px 0;
+    background-color: #96dea1;
+    box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.5);
+}
+
+.form-input {
+    width: 300px;
+    height: 30px;
+    padding: 5px 5px 5px 15px;
+    font-size: 16px;
+    outline: none;
+    border: none;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+
+.form-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+
+    cursor: pointer;
+
+}
+
+.form-button:hover,
+.form-button:focus {
+    background-color: rgb(39, 135, 48);
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -10px;
+    padding-top: 100px;
+}
+
+.photo-card {
+    width: calc(100% / 3 - 10px * 2);
+    margin: 10px;
+    box-shadow: 0px 0px 5px 2px rgba(143, 148, 206, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: rgba(239, 232, 232, 0.901);
+
+}
+.photo-card:hover,
+.photo-card:focus {
+    box-shadow: 0px 0px 10px 5px rgba(55, 43, 43, 0.5);
+}
+
+.info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.is-hidden {
+    display: none;
+}
+
+
+/* example      */
+
+.example {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.5;
+    background-color: #fff;
+    color: #2f2f37;
+    max-width: 960px;
+    padding: 16px;
+}
+
+.example code {
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 700;
+    background-color: #ff6b0a;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.example .background {
+    height: 240px;
+  
+    background-size: cover;
+    background-position: center;
+}

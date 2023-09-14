@@ -1,116 +1,123 @@
-import axios from 'axios';
-import SlimSelect from 'slim-select';
+import { UnsplashAPI } from './js/api-servis';
+import { createGalleryCards } from './js/gallery-cards';
+import './css/index.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-axios.defaults.headers.common['x-api-key'] =
-  'live_CgU1QU2osMc3TIjsrnYRN4ibf8FU7xev27hoOGbyeVIeVA0Kn2HO1TQbRNe4Pc6l';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
-import { fetchBreeds, fetchCatByBreed } from './cat-api';
 
-const elements = {
-  select: document.querySelector(`.breed-select`),
-  catCard: document.querySelector(`.cat-info`),
-  loader: document.querySelector('.loader'),
+const searchFormEl = document.querySelector('#search-form');
+const galleryEl = document.querySelector('.gallery');
+const intersectingEl = document.querySelector('.js-intersecting-element');
+
+let sumOfPhotos = 0;
+
+const unsplashAPI = new UnsplashAPI();
+
+const observerOptions = {
+  root: null,
+  rootMargin: '0px 0px 600px 0px',
+  threshold: 1.0,
 };
 
-// function fetchBreeds() {
-//   showLoader();
-//   return axios.get(`https://api.thecatapi.com/v1/breeds`).then(response => {
-//     return response.data;
-//   });
-// }
-elements.catCard.innerHTML = `<p>Виберіть котика зі списку вище</p>`;
+const onIntersectingElIntersectingViewport = async entries => {
 
- // код для запиту списку порід
-function breedsList() {
-  fetchBreeds()
-    .then(data => {
-      const optionsHtml = data
-        .map(({ id, name }) => `<option value="${id}">${name}</option>`)
-        .join('');
-      elements.select.insertAdjacentHTML('beforeend', optionsHtml); // Додавання списку порід до select елементу
-      new SlimSelect({
-        select: '.breed-select',
-      });
-      hideLoader();
-      showSelect();
-    })
-    .catch(err => {
-      showError();
-      hideLoader();
-    });
+  if (!entries[0].isIntersecting) {
+    return;
+  }
+
+   unsplashAPI.page += 1;
+    
+  try { 
+
+    const { data } = await unsplashAPI.fetchPhotosByQuery();
+
+    galleryEl.insertAdjacentHTML('beforeend', createGalleryCards(data.hits));
+
+    lightbox.refresh();
+    
+    sumOfPhotos += data.hits.length; 
+      
+    if (sumOfPhotos >= data.totalHits) {
+        
+      observer.unobserve(intersectingEl);
+      
+      Notify.warning('We re sorry, but you ve reached the end of search results.');
+
+      return;
+      }
+
+  } catch (err) { console.log(err) };
+
 }
 
-breedsList();
+const observer = new IntersectionObserver(
+  onIntersectingElIntersectingViewport,
+  observerOptions
+);
 
-function showLoader() {
-  elements.loader.style.display = `block`;
-}
 
-function hideLoader() {
-  elements.loader.style.display = `none`;
-}
+const onSearchFormElSubmit = async event => {
 
-function showSelect() {
-  elements.select.classList.remove(`cat-info-vis`);
-}
+  event.preventDefault();
 
-function showError() {
-  Notify.failure(`Oops! Something went wrong! Try reloading the page!`);
-}
+  observer.unobserve(intersectingEl);
 
-function showCatInfo() {
-  elements.catCard.classList.remove(`cat-info-vis`);
-}
-function hideCatInfo() {
-  elements.catCard.classList.add(`cat-info-vis`);
-}
+  galleryEl.innerHTML = '';
+   
+  unsplashAPI.query = event.target.elements.searchQuery.value.trim();
+  
+  unsplashAPI.page = 1;
 
-// function fetchCatByBreed(breedId) {
-//   showLoader();
-//   return axios
-//     .get(`https://api.thecatapi.com/v1/images/search?breed_ids=${breedId}`)
-//     .then(response => {
-//       return response.data[0];
-//     });
-// }
+    // let sumOfPhotos = 0;
+    // if (unsplashAPI.query === '') {
+    //     return
+    // }
+  
+  try {
+    const { data } = await unsplashAPI.fetchPhotosByQuery();
 
-elements.select.addEventListener(`change`, createCard);
+    sumOfPhotos = 0 + data.hits.length;
+    console.log(sumOfPhotos)
+ 
+    if (data.totalHits === 0) {
+          
+      Notify.failure('Sorry, there are no images matching your search query. Please try again.');
 
-function createCard(event) {
-  const selectedBreedId = event.target.value;
-    hideCatInfo();
+      event.target.reset();
+
+      galleryEl.innerHTML = '';
+
+      observer.unobserve(intersectingEl);
+
+        return;
+    }
+    console.log(data)
     
 
-  // Отримати дані про кота за вибраною породою
-  fetchCatByBreed(selectedBreedId)
-    .then(({ url, breeds }) => {
-      const { temperament, description, name } = breeds[0];
+    galleryEl.innerHTML = createGalleryCards(data.hits);
 
-      const catInfo = `<img class="catImage" src="${url}" alt="${name}" width="280"/>
-      <div class="cat-descr"><h1>${name}</h1>
-      <h2>${temperament}</h2>
-      <p>${description}</p></div>`;
+    lightbox.refresh();
 
-      elements.catCard.innerHTML = catInfo;
+    Notify.success(`Hooray! We found ${data.total} images.`);
+    
+   
+      observer.observe(intersectingEl);
 
-      // showCatInfo();
-    })
-    .then(() => {
-      const catImg = document.querySelector('.catImage');
-      if (catImg) {
-        catImg.style.display = `block`;
-        catImg.style.paddingTop = `15px`;
-        catImg.style.alignSelf = `flex-start`;
-      }
-      catImg.addEventListener('load', function () {
-        hideLoader();
-        showCatInfo();
-      });
-    })
-    .catch(error => {
-      showError();
-      hideLoader();
-    });
-}
+    if (sumOfPhotos === data.totalHits) {
 
-export { showLoader };
+      observer.unobserve(intersectingEl);
+      
+      return;
+   }
+
+   } catch (err) { console.log(err) };
+  
+ };
+
+searchFormEl.addEventListener('submit', onSearchFormElSubmit);
+
+var lightbox = new SimpleLightbox('.photo-card a', {
+    captionsData: 'alt',
+    captionDelay: 250,
+});
